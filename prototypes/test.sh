@@ -17,8 +17,8 @@ fi
 PROGRAM=$1
 
 check_status() {
-    EXIT_CODE = $1
-    INPUT = $2
+    EXIT_CODE=$1
+    INPUT=$2
     if [ $EXIT_CODE -ne 0 ]
     then
 	echo "fixed-width-input exited with failure."
@@ -40,11 +40,26 @@ NO_SPACES_TEST="hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"
 NO_SPACES_LONG_TEST="hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"
 MEMORY_LIMIT_TEST="This input is designed to exceed the limit of the memory allocated for the program - currently 200 characters. A large amount of input will be provided to ensure that the program aborts safely. This input should be pasted while the program runs in Valgrind as well, to check for memory leaks."
 
-# Simply add a variable to this loop to test other cases
-for TEST_INPUT in {$TEST_ONE, $TEST_TWO, $TEST_THREE, $TEST_FOUR, $NO_SPACES_TEST, $NO_SPACES_LONG_TEST, $MEMORY_LIMIT_TEST}
-do
-    echo $TEST_INPUT | ./$PROGRAM
-    check_status $? $TEST_INPUT
-done
+# Test each input against the program
+echo $TEST_ONE | ./$PROGRAM
+check_status $? $TEST_ONE
+
+echo $TEST_TWO | ./$PROGRAM
+check_status $? $TEST_TWO
+
+echo $TEST_THREE | ./$PROGRAM
+check_status $? $TEST_THREE
+
+echo $TEST_FOUR | ./$PROGRAM
+check_status $? $TEST_FOUR
+
+echo $NO_SPACES_TEST | ./$PROGRAM
+check_status $? $NO_SPACES_TEST
+
+echo $NO_SPACES_LONG_TEST | ./$PROGRAM
+check_status $? $NO_SPACES_LONG_TEST
+
+echo $MEMORY_LIMIT_TEST | ./$PROGRAM
+check_status $? $MEMORY_LIMIT_TEST
 
 exit 0

@@ -4,6 +4,15 @@
 # aborting if necessary. Output can be viewed on stdout as tests are run,
 # to ensure that results match expectations.
 
+# Ensure one command line argument has been provided
+# with the name of the program to be tested
+
+if [ $# -ne 1 ]
+then
+    echo "USAGE: test.sh [PROGRAM]"
+    exit 1
+fi
+
 # Command line argument becomes the program to test
 PROGRAM=$1
 
