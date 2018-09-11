@@ -9,7 +9,9 @@
  * and printing out from the start of the line.
  * Terminal settings must be changed to achieve this,
  * as characters will otherwise not be received by the program
- * until the user hits enter.
+ * until the user hits enter, or line length limit is exceeded,
+ * in which case a newline will be appended, program will finish,
+ * and the user will be notified.
  */
 
 #define MAX_LINE_LENGTH 50 // set line limit for memory allocation purposes
@@ -47,7 +49,7 @@ int main(int argc, char *argv[]) {
   while ((c = getchar()) != '\n') {
     if (chars >= MAX_LINE_LENGTH - 1) { // ensure that memory limit will not be exceeded
       printf("\nCharacter limit has been exceeded. Your input will not be saved.\n");
-      free(input);
+      free(input); // free variable if program is forced to abort
       exit(1);
     }
     input[chars] = c; //append new character to input
@@ -58,7 +60,7 @@ int main(int argc, char *argv[]) {
   }
   printf("\n");
 
-  free(input);
+  free(input); // free input variable if program runs successfully
 
   return 0;
 }
