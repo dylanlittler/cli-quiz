@@ -36,6 +36,7 @@ TEST_ONE="This is some text"
 TEST_TWO="This is some text that is designed to exceed the limit of 50 characters."
 TEST_THREE="This is some text that is designed to exceed the limit of 100 characters with a lot of input text which just keeps going."
 TEST_FOUR="This is a lot of input text, designed to test the program's ability to handle input that exceeds 150 characters. The output returned should wrap over 4 lines."
+ONE_SPACE_TEST="hhhhhhhhhhhhhhhh hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"
 NO_SPACES_TEST="hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"
 NO_SPACES_LONG_TEST="hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"
 MEMORY_LIMIT_TEST="This input is designed to exceed the limit of the memory allocated for the program - currently 200 characters. A large amount of input will be provided to ensure that the program aborts safely. This input should be pasted while the program runs in Valgrind as well, to check for memory leaks."
@@ -52,6 +53,9 @@ check_status $? $TEST_THREE
 
 echo $TEST_FOUR | ./$PROGRAM
 check_status $? $TEST_FOUR
+
+echo $ONE_SPACE_TEST | ./$PROGRAM
+check_status $? $ONE_SPACE_TEST
 
 echo $NO_SPACES_TEST | ./$PROGRAM
 check_status $? $NO_SPACES_TEST

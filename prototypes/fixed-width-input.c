@@ -15,21 +15,29 @@ int find_space(char *input, int start, int end) {
   /* Search for spaces in input before end
    * and return the number of the index. */
   int i = 0;
-  for (i = start; i < end; i++) {
-    if (input[MAX_LINE_LENGTH - i] == ' ')
-      return MAX_LINE_LENGTH - i;
+  for (i = 0; i < MAX_LINE_LENGTH; i++) {
+    if (input[end - i] == ' ')
+      return end - i;
   }
-  return MAX_LINE_LENGTH; // fallthrough in case string contains no spaces
+  return end; // fallthrough in case string contains no spaces
 }
 
 char *insert_newlines(char *input) {
-  int line_end = strlen(input);
+  int line_end = MAX_LINE_LENGTH;
   int line_start = 0;
-  if (strlen(input) <= MAX_LINE_LENGTH) {
-    return input;
-  } else {
-    line_end = find_space(input, line_start, line_end);
-    input[line_end] = '\n';
+  int prev_line_end = 0;
+
+  for (line_start = 0; line_start <= strlen(input); line_start += MAX_LINE_LENGTH) {
+    if (strlen(input) - line_start <= MAX_LINE_LENGTH) {
+      return input;
+    } else {
+      line_end = find_space(input, prev_line_end, line_end);
+      input[line_end] = '\n';
+      prev_line_end = line_end;
+      line_end += MAX_LINE_LENGTH;
+      printf("Line_start: %d, line_end: %d, prev_line_end: %d\n",
+	     line_start, line_end, prev_line_end);
+    }
   }
   return input;
 }
