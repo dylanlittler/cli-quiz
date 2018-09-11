@@ -1,0 +1,3 @@
+allow for different numbers of columns
+ensure columns print after database creation
+optimise code
