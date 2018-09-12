@@ -21,6 +21,7 @@ check_status() {
     INPUT=$@
     if [ $EXIT_CODE -ne 0 ]
     then
+	echo "##############################"
 	echo "$PROGRAM exited with failure."
 	echo "Input was:"
 	echo $INPUT
