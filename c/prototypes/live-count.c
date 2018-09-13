@@ -94,6 +94,7 @@ int main(int argc, char *argv[]) {
     if (chars >= MAX_INPUT - 1) { // ensure that memory limit will not be exceeded
       printf("\nCharacter limit has been exceeded. Your input will not be saved.\n");
       free(input); // free variable if program is forced to abort
+      free(carriage_return);
       exit(1);
     }
 
@@ -102,7 +103,7 @@ int main(int argc, char *argv[]) {
 	continue;
       chars--;
       input[chars] = 0;
-      printf("\033[1D \033[1D"); // erase character and move cursor back
+      printf("\033[1D \033[1D"); // overwrite character with a space and move cursor back
     } else {
       input[chars] = c; //append new character to input
       chars++; // increment now so that count will be accurate
@@ -111,10 +112,12 @@ int main(int argc, char *argv[]) {
     if (chars - (MAX_LINE_LENGTH * lines) > MAX_LINE_LENGTH) {
       insert_newline(input);
       lines++;
-      snprintf(carriage_return, return_size, "\033[%dA", lines - 1);
+      printf("\n");
+      snprintf(carriage_return, return_size, "\033[%dA\r", lines);
     }
     
     printf("%schars %03d/%03d %s", carriage_return, chars, MAX_INPUT, input); // reprint input, overwriting current input
+    fflush(stdout);
   }
   printf("\n");
 
