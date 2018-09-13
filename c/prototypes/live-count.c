@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
   int carriage_return_size = 10;
   
   char *carriage_return = malloc(carriage_return_size); // escape characters required should not exceed 10 characters
-  memset(carriage_return, 0, return_size);
+  memset(carriage_return, 0, carriage_return_size);
   carriage_return[0] = '\r';
 
   struct Space_holder *last_space = malloc(sizeof(struct Space_holder));
@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
       /* carriage_return variable now jumps back to original cursor position
        * after printing newlines which are inserted into input[].
        */
-      snprintf(carriage_return, return_size, "\033[%dA\r", lines);
+      snprintf(carriage_return, carriage_return_size, "\033[%dA\r", lines);
       fflush(stdout);
     }
 
