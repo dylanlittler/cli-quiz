@@ -112,12 +112,15 @@ int main(int argc, char *argv[]) {
     if (chars - (MAX_LINE_LENGTH * lines) > MAX_LINE_LENGTH) {
       insert_newline(input);
       lines++;
+      printf("\33[2K");
       printf("\n");
       snprintf(carriage_return, return_size, "\033[%dA\r", lines);
+
+      fflush(stdout);
     }
-    
+
     printf("%schars %03d/%03d %s", carriage_return, chars, MAX_INPUT, input); // reprint input, overwriting current input
-    fflush(stdout);
+    //fflush(stdout);    
   }
   printf("\n");
 
