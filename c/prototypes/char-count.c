@@ -58,13 +58,11 @@ int main(int argc, char *argv[]) {
       chars--;
       input[chars] = 0;
       printf("\033[1D \033[1D");
-      fflush(stdout);
     } else {
       input[chars] = c; //append new character to input
       chars++; // increment now so that count will be accurate
     }
     printf("\rchars %02d/%d %s", chars, MAX_LINE_LENGTH, input); // reprint input, overwriting current input
-    fflush(stdout);
   }
   printf("\n");
 

@@ -96,17 +96,25 @@ int main(int argc, char *argv[]) {
       free(input); // free variable if program is forced to abort
       exit(1);
     }
-    input[chars] = c; //append new character to input
-    chars++; // increment now so that count will be accurate
 
+    if (c == 127) { // handle backspace
+      if (chars == 0) //prevents errors caused by initial backspace
+	continue;
+      chars--;
+      input[chars] = 0;
+      printf("\033[1D \033[1D"); // erase character and move cursor back
+    } else {
+      input[chars] = c; //append new character to input
+      chars++; // increment now so that count will be accurate
+    }
+    
     if (chars - (MAX_LINE_LENGTH * lines) > MAX_LINE_LENGTH) {
       insert_newline(input);
       lines++;
       snprintf(carriage_return, return_size, "\033[%dA", lines - 1);
     }
     
-    printf("%schars %d %s", carriage_return, chars, input); // reprint input, overwriting current input
-    //fflush(stdout);
+    printf("%schars %03d/%03d %s", carriage_return, chars, MAX_INPUT, input); // reprint input, overwriting current input
   }
   printf("\n");
 
