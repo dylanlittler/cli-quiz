@@ -13,7 +13,7 @@
 #define MAX_LINE_LENGTH 50 // most terminal screens are longer than this
 #define MAX_INPUT 200
 
-int find_space(char *input, int start, int end) {
+int find_space(char *input, int end) {
   /* Search for spaces in input before end
    * and return the number of the index. */
   int i = 0;
@@ -32,15 +32,13 @@ char *insert_newlines(char *input) {
 
   int line_end = MAX_LINE_LENGTH;
   int line_start = 0;
-  int prev_line_end = 0;
 
   for (line_start = 0; line_start <= strlen(input); line_start += MAX_LINE_LENGTH) {
     if (strlen(input) - line_start <= MAX_LINE_LENGTH) {
       return input; // break the loop if inserting newline is not needed
     } else {
-      line_end = find_space(input, prev_line_end, line_end);
+      line_end = find_space(input, line_end);
       input[line_end] = '\n';
-      prev_line_end = line_end; // save previous end point to be used as starting point for find_space()
       line_end += MAX_LINE_LENGTH;
     }
   }
