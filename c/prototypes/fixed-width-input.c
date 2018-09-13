@@ -24,7 +24,7 @@ int find_space(char *input, int end) {
   return end; // fallthrough in case string contains no spaces
 }
 
-char *insert_newlines(char *input) {
+void insert_newlines(char *input) {
   /* A newline will be inserted at a space at intervals as close to
    * MAX_LINE_LENGTH as possible. Iteration will continue as long
    * as the remaining string exceeds this limit.
@@ -35,14 +35,13 @@ char *insert_newlines(char *input) {
 
   for (line_start = 0; line_start <= strlen(input); line_start += MAX_LINE_LENGTH) {
     if (strlen(input) - line_start <= MAX_LINE_LENGTH) {
-      return input; // break the loop if inserting newline is not needed
+      break;
     } else {
       line_end = find_space(input, line_end);
       input[line_end] = '\n';
       line_end += MAX_LINE_LENGTH;
     }
   }
-  return input;
 }
 
 int main(int argc, char *argv[]) {
