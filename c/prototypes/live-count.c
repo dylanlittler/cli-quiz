@@ -50,7 +50,7 @@ int find_space(char *input, int start, int end) {
   return end; // fallthrough in case string contains no spaces
 }
 
-char *insert_newlines(char *input) {
+char *insert_newline(char *input) {
   /* A newline will be inserted at a space at intervals as close to
    * MAX_LINE_LENGTH as possible. Iteration will continue as long
    * as the remaining string exceeds this limit.
@@ -77,12 +77,18 @@ char *insert_newlines(char *input) {
 int main(int argc, char *argv[]) {
   enable_raw_mode();
 
-  int c, chars;
-  char *carriage_returns = "\r";
+  int c, chars, lines;
+
+  int return_size = 10;
+  char *carriage_return = malloc(return_size); // escape characters required should not exceed 10 characters
+  memset(carriage_return, 0, return_size);
+  carriage_return[0] = '\r';
+  
   char *input = malloc(MAX_INPUT);
   memset(input, 0, MAX_INPUT);
 
   chars = 0;
+  lines = 0;
   printf("Please type your text below. Limit is %d\n", MAX_INPUT);
   while ((c = getchar()) != '\n') {
     if (chars >= MAX_INPUT - 1) { // ensure that memory limit will not be exceeded
@@ -93,12 +99,19 @@ int main(int argc, char *argv[]) {
     input[chars] = c; //append new character to input
     chars++; // increment now so that count will be accurate
 
-    printf("%schars %d %s", carriage_returns, chars, input); // reprint input, overwriting current input
-    fflush(stdout);
+    if (chars - (MAX_LINE_LENGTH * lines) > MAX_LINE_LENGTH) {
+      insert_newline(input);
+      lines++;
+      snprintf(carriage_return, return_size, "\033[%dA", lines - 1);
+    }
+    
+    printf("%schars %d %s", carriage_return, chars, input); // reprint input, overwriting current input
+    //fflush(stdout);
   }
   printf("\n");
 
   free(input); // free input variable if program runs successfully
-
+  free(carriage_return);
+  
   return 0;
 }
