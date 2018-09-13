@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
       fflush(stdout);
     }
 
-    printf("%schars %03d/%03d %s", carriage_return, chars, MAX_INPUT, input); // reprint input, overwriting current input
+    printf("%schars % 2d/%03d %s", carriage_return, chars, MAX_INPUT, input); // reprint input, overwriting current input
     fflush(stdout);    
   }
   printf("\n");
