@@ -56,9 +56,7 @@ int find_space(char *input, int end) {
 
 void insert_newline(char *input, struct Space_holder *last_space) {
   /* A newline will be inserted at a space as close to
-   * MAX_LINE_LENGTH as possible.
-   */
-
+   * MAX_LINE_LENGTH as possible. */
   int line_end = MAX_LINE_LENGTH;
 
   line_end = find_space(input, last_space->previous_space);
@@ -71,9 +69,9 @@ int main(int argc, char *argv[]) {
   enable_raw_mode();
 
   int c, chars, lines;
-
-  int return_size = 10;
-  char *carriage_return = malloc(return_size); // escape characters required should not exceed 10 characters
+  int carriage_return_size = 10;
+  
+  char *carriage_return = malloc(carriage_return_size); // escape characters required should not exceed 10 characters
   memset(carriage_return, 0, return_size);
   carriage_return[0] = '\r';
 
@@ -85,14 +83,12 @@ int main(int argc, char *argv[]) {
 
   chars = 0;
   lines = 0;
+  
   printf("Please type your text below. Limit is %d\n", MAX_INPUT);
   while ((c = getchar()) != '\n') {
     if (chars >= MAX_INPUT - 1) { // ensure that memory limit will not be exceeded
       printf("\nCharacter limit has been exceeded. Your input will not be saved.\n");
-      free(input); // free variable if program is forced to abort
-      free(carriage_return);
-      free(last_space);
-      exit(1); // replace all this code with a goto error statement.
+      goto error;
     }
 
     if (c == 127) { // handle backspace
@@ -109,24 +105,29 @@ int main(int argc, char *argv[]) {
     if (chars - (MAX_LINE_LENGTH * lines) > MAX_LINE_LENGTH) {
       insert_newline(input, last_space);
       lines++;
-      printf("\33[2K");
+      printf("\33[2K"); // erase left over word fragments after newline
       printf("\n");
+      /* carriage_return variable now jumps back to original cursor position
+       * after printing newlines which are inserted into input[].
+       */
       snprintf(carriage_return, return_size, "\033[%dA\r", lines);
       fflush(stdout);
     }
-
-    //if (chars > 101) {
-    //  continue;
-    //}
 
     printf("%schars %03d/%03d %s", carriage_return, chars, MAX_INPUT, input); // reprint input, overwriting current input
     fflush(stdout);    
   }
   printf("\n");
 
-  free(input); // free input variable if program runs successfully
+  free(input);
   free(carriage_return);
   free(last_space);
   
   return 0;
+
+ error:
+  free(input);
+  free(carriage_return);
+  free(last_space);
+  return 1;
 }
