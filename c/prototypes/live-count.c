@@ -20,6 +20,10 @@
 
 struct termios orig_termios; // struct to save original terminal settings
 
+struct Space_holder {
+  int previous_space;
+};
+
 void disable_raw_mode() {
   /* Restore original terminal settings. */
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
@@ -39,7 +43,7 @@ void enable_raw_mode() {
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 }
 
-int find_space(char *input, int start, int end) {
+int find_space(char *input, int end) {
   /* Search for spaces in input before end
    * and return the number of the index. */
   int i = 0;
@@ -50,7 +54,7 @@ int find_space(char *input, int start, int end) {
   return end; // fallthrough in case string contains no spaces
 }
 
-char *insert_newline(char *input) {
+void insert_newline(char *input, struct Space_holder *last_space) {
   /* A newline will be inserted at a space at intervals as close to
    * MAX_LINE_LENGTH as possible. Iteration will continue as long
    * as the remaining string exceeds this limit.
@@ -58,19 +62,17 @@ char *insert_newline(char *input) {
 
   int line_end = MAX_LINE_LENGTH;
   int line_start = 0;
-  int prev_line_end = 0;
 
   for (line_start = 0; line_start <= strlen(input); line_start += MAX_LINE_LENGTH) {
     if (strlen(input) - line_start <= MAX_LINE_LENGTH) {
-      return input; // break the loop if inserting newline is not needed
+      break;
     } else {
-      line_end = find_space(input, prev_line_end, line_end);
+      line_end = find_space(input, line_end);
       input[line_end] = '\n';
-      prev_line_end = line_end; // save previous end point to be used as starting point for find_space()
+      last_space->previous_space = line_end;
       line_end += MAX_LINE_LENGTH;
     }
   }
-  return input;
 }
 
 
@@ -83,6 +85,8 @@ int main(int argc, char *argv[]) {
   char *carriage_return = malloc(return_size); // escape characters required should not exceed 10 characters
   memset(carriage_return, 0, return_size);
   carriage_return[0] = '\r';
+
+  struct Space_holder *last_space = malloc(sizeof(struct Space_holder));
   
   char *input = malloc(MAX_INPUT);
   memset(input, 0, MAX_INPUT);
@@ -110,7 +114,7 @@ int main(int argc, char *argv[]) {
     }
     
     if (chars - (MAX_LINE_LENGTH * lines) > MAX_LINE_LENGTH) {
-      insert_newline(input);
+      insert_newline(input, last_space);
       lines++;
       printf("\33[2K");
       printf("\n");
@@ -129,6 +133,7 @@ int main(int argc, char *argv[]) {
 
   free(input); // free input variable if program runs successfully
   free(carriage_return);
+  free(last_space);
   
   return 0;
 }
