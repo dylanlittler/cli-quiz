@@ -52,16 +52,18 @@ int main(int argc, char *argv[]) {
       free(input); // free variable if program is forced to abort
       exit(1);
     }
-    if (c == 127) {
-      input[chars - 1] = 0;
+    if (c == 127) { // handle backspace
+      if (chars == 0) // prevents errors caused by initial backspace, then insert
+	continue;
       chars--;
+      input[chars] = 0;
       printf("\033[1D \033[1D");
       fflush(stdout);
     } else {
       input[chars] = c; //append new character to input
       chars++; // increment now so that count will be accurate
     }
-    printf("\rchars %d %s", chars, input); // reprint input, overwriting current input
+    printf("\rchars %02d/%d %s", chars, MAX_LINE_LENGTH, input); // reprint input, overwriting current input
     fflush(stdout);
   }
   printf("\n");
