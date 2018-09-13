@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
       input[chars] = 0;
       printf("\033[1D \033[1D"); // overwrite character with a space and move cursor back
     } else {
-      input[chars] = c; //append new character to input
+      input[chars] = c; // append new character to input
       chars++; // increment now so that count will be accurate
     }
     
@@ -115,9 +115,12 @@ int main(int argc, char *argv[]) {
       printf("\33[2K");
       printf("\n");
       snprintf(carriage_return, return_size, "\033[%dA\r", lines);
-
       fflush(stdout);
     }
+
+    //if (chars > 101) {
+    //continue;
+    //}
 
     printf("%schars %03d/%03d %s", carriage_return, chars, MAX_INPUT, input); // reprint input, overwriting current input
     //fflush(stdout);    
