@@ -1,7 +1,7 @@
 CFLAGS=-Wall -Werror -g
 
-all: escape-char char-count fixed-width-input
+all: escape-char char-count fixed-width-input live-count
 
 clean:
 	rm -rf *~ # Remove Emacs temp files
-	rm -rf escape-char char-count fixed-width-input
+	rm -rf escape-char char-count fixed-width-input live-count

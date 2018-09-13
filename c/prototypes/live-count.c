@@ -1,17 +1,43 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <termios.h>
 
-/* This program will receive long strings of input and
+/** This program will receive long strings of input and
  * insert newlines at the nearest space before the
  * line length limit, which is designed to reflect a length
- * That will fit in a standard terminal.
+ * That will fit in a standard terminal. Character count
+ * will be updated as the user types.
+ * Terminal settings must be changed to achieve this,
+ * as characters will otherwise not be received by the program.
  * If maximum input length is exceeded, input will be trimmed,
  * and the user will be notified.
  */
 
 #define MAX_LINE_LENGTH 50 // most terminal screens are longer than this
 #define MAX_INPUT 200
+
+struct termios orig_termios; // struct to save original terminal settings
+
+void disable_raw_mode() {
+  /* Restore original terminal settings. */
+  tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
+}
+
+void enable_raw_mode() {
+  /* Turn off canononical mode in terminal
+   * so that keystrokes are sent to the program. */
+
+  // Save original terminal settings
+  tcgetattr(STDIN_FILENO, &orig_termios);
+  atexit(disable_raw_mode); // ensure settings are restored
+
+  struct termios raw = orig_termios;
+  raw.c_lflag &= ~(ECHO | ICANON); // Stop terminal from processing input
+
+  tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+}
 
 int find_space(char *input, int start, int end) {
   /* Search for spaces in input before end
@@ -47,77 +73,19 @@ char *insert_newlines(char *input) {
   return input;
 }
 
-int main(int argc, char *argv[]) {
-  char *user_input = malloc(MAX_INPUT);
-  memset(user_input, 0, MAX_INPUT);
-  int c, chars;
-
-  chars = 0;
-  while ((c = getchar()) != '\n') {
-    if (chars >= MAX_INPUT - 1) {
-      printf("Maximum input exceeded. Your input will not be saved.\n");
-      free(user_input);
-      exit(1);
-    }
-    user_input[chars] = c;
-    chars++;
-  }
-  insert_newlines(user_input);
-  printf("Your input:\n%s\n", user_input);
-  
-  free(user_input);
-  return 0;
-}
-#include <unistd.h>
-#include <termios.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-/* This program will provide a live character count of
- * the user's input by adding each character to a variable
- * and printing out from the start of the line.
- * Terminal settings must be changed to achieve this,
- * as characters will otherwise not be received by the program
- * until the user hits enter, or line length limit is exceeded,
- * in which case a newline will be appended, program will finish,
- * and the user will be notified.
- */
-
-#define MAX_LINE_LENGTH 50 // set line limit for memory allocation purposes
-
-struct termios orig_termios; // struct to save original terminal settings
-
-void disable_raw_mode() {
-  /* Restore original terminal settings. */
-  tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
-}
-
-void enable_raw_mode() {
-  /* Turn off canon mode in terminal
-   * so that keystrokes are sent to the program. */
-
-  // Save original terminal settings
-  tcgetattr(STDIN_FILENO, &orig_termios);
-  atexit(disable_raw_mode); // ensure settings are restored
-
-  struct termios raw = orig_termios;
-  raw.c_lflag &= ~(ECHO | ICANON); // Stop terminal from processing input
-
-  tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
-}
 
 int main(int argc, char *argv[]) {
   enable_raw_mode();
 
   int c, chars;
-  char *input = malloc(MAX_LINE_LENGTH);
-  memset(input, 0, MAX_LINE_LENGTH);
+  char *carriage_returns = "\r";
+  char *input = malloc(MAX_INPUT);
+  memset(input, 0, MAX_INPUT);
 
   chars = 0;
-  printf("Please type your text below. Limit is %d\n", MAX_LINE_LENGTH);
+  printf("Please type your text below. Limit is %d\n", MAX_INPUT);
   while ((c = getchar()) != '\n') {
-    if (chars >= MAX_LINE_LENGTH - 1) { // ensure that memory limit will not be exceeded
+    if (chars >= MAX_INPUT - 1) { // ensure that memory limit will not be exceeded
       printf("\nCharacter limit has been exceeded. Your input will not be saved.\n");
       free(input); // free variable if program is forced to abort
       exit(1);
@@ -125,7 +93,7 @@ int main(int argc, char *argv[]) {
     input[chars] = c; //append new character to input
     chars++; // increment now so that count will be accurate
 
-    printf("\rchars %d %s", chars, input); // reprint input, overwriting current input
+    printf("%schars %d %s", carriage_returns, chars, input); // reprint input, overwriting current input
     fflush(stdout);
   }
   printf("\n");
