@@ -52,9 +52,15 @@ int main(int argc, char *argv[]) {
       free(input); // free variable if program is forced to abort
       exit(1);
     }
-    input[chars] = c; //append new character to input
-    chars++; // increment now so that count will be accurate
-
+    if (c == 127) {
+      input[chars - 1] = 0;
+      chars--;
+      printf("\033[1D \033[1D");
+      fflush(stdout);
+    } else {
+      input[chars] = c; //append new character to input
+      chars++; // increment now so that count will be accurate
+    }
     printf("\rchars %d %s", chars, input); // reprint input, overwriting current input
     fflush(stdout);
   }
