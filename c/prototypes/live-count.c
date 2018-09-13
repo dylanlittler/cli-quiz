@@ -55,24 +55,15 @@ int find_space(char *input, int end) {
 }
 
 void insert_newline(char *input, struct Space_holder *last_space) {
-  /* A newline will be inserted at a space at intervals as close to
-   * MAX_LINE_LENGTH as possible. Iteration will continue as long
-   * as the remaining string exceeds this limit.
+  /* A newline will be inserted at a space as close to
+   * MAX_LINE_LENGTH as possible.
    */
 
   int line_end = MAX_LINE_LENGTH;
-  int line_start = 0;
 
-  for (line_start = 0; line_start <= strlen(input); line_start += MAX_LINE_LENGTH) {
-    if (strlen(input) - line_start <= MAX_LINE_LENGTH) {
-      break;
-    } else {
-      line_end = find_space(input, line_end);
-      input[line_end] = '\n';
-      last_space->previous_space = line_end;
-      line_end += MAX_LINE_LENGTH;
-    }
-  }
+  line_end = find_space(input, last_space->previous_space);
+  input[line_end] = '\n';
+  last_space->previous_space = line_end + MAX_LINE_LENGTH;
 }
 
 
@@ -87,6 +78,7 @@ int main(int argc, char *argv[]) {
   carriage_return[0] = '\r';
 
   struct Space_holder *last_space = malloc(sizeof(struct Space_holder));
+  last_space->previous_space = MAX_LINE_LENGTH;
   
   char *input = malloc(MAX_INPUT);
   memset(input, 0, MAX_INPUT);
@@ -99,7 +91,8 @@ int main(int argc, char *argv[]) {
       printf("\nCharacter limit has been exceeded. Your input will not be saved.\n");
       free(input); // free variable if program is forced to abort
       free(carriage_return);
-      exit(1);
+      free(last_space);
+      exit(1); // replace all this code with a goto error statement.
     }
 
     if (c == 127) { // handle backspace
@@ -123,11 +116,11 @@ int main(int argc, char *argv[]) {
     }
 
     //if (chars > 101) {
-    //continue;
+    //  continue;
     //}
 
     printf("%schars %03d/%03d %s", carriage_return, chars, MAX_INPUT, input); // reprint input, overwriting current input
-    //fflush(stdout);    
+    fflush(stdout);    
   }
   printf("\n");
 
