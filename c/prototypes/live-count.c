@@ -20,6 +20,13 @@
 
 struct termios orig_termios; // struct to save original terminal settings
 
+struct Input_handler {
+  int previous_space;
+  char *input;
+  int lines;
+  int chars;
+};
+
 struct Space_holder {
   int previous_space;
 };
@@ -73,65 +80,75 @@ int handle_backspace(char *input, int chars) {
   return chars;
 }
 
-int main(int argc, char *argv[]) {
+int handle_input(char *input) {
   enable_raw_mode();
 
   int c, chars, lines;
   int carriage_return_size = 10;
-  
-  char *carriage_return = malloc(carriage_return_size); // escape characters required should not exceed 10 characters
+
+  char *carriage_return = malloc(carriage_return_size); // room for escape characters
   memset(carriage_return, 0, carriage_return_size);
   carriage_return[0] = '\r';
 
   struct Space_holder *last_space = malloc(sizeof(struct Space_holder));
   last_space->previous_space = MAX_LINE_LENGTH;
-  
-  char *input = malloc(MAX_INPUT);
-  memset(input, 0, MAX_INPUT);
 
-  chars = 0;
-  lines = 0;
-  
-  printf("Please type your text below. Limit is %d\n", MAX_INPUT);
+  chars = lines = 0;
+
   while ((c = getchar()) != '\n') {
-    if (chars >= MAX_INPUT - 1) { // ensure that memory limit will not be exceeded
+    if (chars >= MAX_INPUT - 1) {
       printf("\nCharacter limit has been exceeded. Your input will not be saved.\n");
       goto error;
     }
 
-    if (c == 127) { // handle backspace
-      chars = handle_backspace(input, chars); // chars must be updated
+    if (c == 127) {
+      chars = handle_backspace(input, chars); // chars value must be updated
     } else {
       input[chars] = c; // append new character to input
-      chars++; // increment now so that count will be accurate
+      chars++; // increment chars now so that count is accurate
     }
-    
+
     if (chars - (MAX_LINE_LENGTH * lines) > MAX_LINE_LENGTH) {
       insert_newline(input, last_space);
       lines++;
-      printf("\33[2K"); // erase left over word fragments after newline
-      printf("\n");
-      /* carriage_return variable now jumps back to original cursor position
-       * after printing newlines which are inserted into input[].
-       */
+      printf("\33[2K\n"); // erase left over word fragments and jump to newline
+      /* carriage_return variable must return to original cursor position
+      * every time a newline is printed. */
       snprintf(carriage_return, carriage_return_size, "\033[%dA\r", lines);
       fflush(stdout);
     }
 
     printf("%schars % 2d/%03d %s", carriage_return, chars, MAX_INPUT, input); // reprint input, overwriting current input
-    fflush(stdout);    
+    fflush(stdout);
   }
   printf("\n");
 
-  free(input);
   free(carriage_return);
   free(last_space);
+  return 0;
   
+ error:
+  free(carriage_return);
+  free(last_space);
+  return 1;
+}
+
+int main(int argc, char *argv[]) {
+  /** User input is initialised in main function
+   * so that it can be available from here.
+   */
+  char *input = malloc(MAX_INPUT);
+  memset(input, 0, MAX_INPUT);
+
+  printf("Please type your text below. Limit is %d\n", MAX_INPUT);
+  int rc = handle_input(input);
+  if (rc != 0)
+    goto error;
+  
+  free(input);
   return 0;
 
  error:
   free(input);
-  free(carriage_return);
-  free(last_space);
   return 1;
 }
