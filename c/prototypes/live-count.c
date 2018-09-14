@@ -26,10 +26,6 @@ struct Input_handler {
   int chars;
 };
 
-struct Space_holder {
-  int previous_space;
-};
-
 void disable_raw_mode() {
   /* Restore original terminal settings. */
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
@@ -63,11 +59,10 @@ int find_space(struct Input_handler *input) {
 void insert_newline(struct Input_handler *input) {
   /* A newline will be inserted at a space as close to
    * MAX_LINE_LENGTH as possible. */
-  int line_end = input->previous_space;
 
-  line_end = find_space(input);
-  input->input[line_end] = '\n';
-  input->previous_space += line_end;
+  input->previous_space = find_space(input);
+  input->input[input->previous_space] = '\n';
+  input->previous_space += input->max_line_length;
 }
 
 void handle_backspace(struct Input_handler *input) {
