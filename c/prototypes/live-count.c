@@ -72,8 +72,8 @@ void handle_backspace(struct Input_handler *input) {
   input->chars--;
   input->cursor_pos--;
   if (input->input[input->chars - 1] == '\n') {
-    printf("\033[1A");
-    input->cursor_pos = input->previous_space - input->max_line_length;
+    printf("\033[0A");
+    input->cursor_pos = (input->previous_space - input->max_line_length) + 14;
   }
   input->input[input->chars] = 0;
   printf("\033[1D \033[1D"); // overwrite character and move cursor back
