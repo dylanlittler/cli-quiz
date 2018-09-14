@@ -1,0 +1,2 @@
+Program needs to go to the start of the original line, move forward six spaces, then print char count and max_input
+Then cursor needs to go forward input->chars + 1 and print next character. If chars > 50, cursor needs to go to next line, and move forward chars - previous_space
