@@ -26,10 +26,6 @@ struct Input_handler {
   int chars;
 };
 
-struct Space_holder {
-  int previous_space;
-};
-
 void disable_raw_mode() {
   /* Restore original terminal settings. */
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
@@ -83,7 +79,6 @@ int handle_input(struct Input_handler *input) {
 
   int c;
   int carriage_return_size = 10;
-
   char *carriage_return = malloc(carriage_return_size); // room for escape characters
   memset(carriage_return, 0, carriage_return_size);
   carriage_return[0] = '\r';

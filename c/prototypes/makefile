@@ -1,11 +1,11 @@
 CFLAGS=-Wall -Werror -g
 
-all: escape-char char-count fixed-width-input live-count count-functions.o counter
+all: escape-char char-count fixed-width-input live-count counter.o counter_main
 
-count-functions.o: count-functions.c
+counter.o: counter.c
 
-counter: counter.c count-functions.o
+counter_main: counter_main.c counter.o
 
 clean:
 	rm -rf *~ # Remove Emacs temp files
-	rm -rf escape-char char-count fixed-width-input live-count
+	rm -rf escape-char char-count fixed-width-input live-count counter.o counter_main
