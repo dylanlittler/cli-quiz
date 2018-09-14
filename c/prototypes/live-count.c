@@ -76,9 +76,10 @@ void handle_backspace(struct Input_handler *input) {
 int handle_input(struct Input_handler *input) {
   enable_raw_mode();
 
-  int c;
+  int c, i;
   int carriage_return_size = 10;
-  int cursor_pos = 0;
+  int trailing_chars = 0;
+  int cursor_pos = 1; // position of first character of input
 
   char *carriage_return = malloc(carriage_return_size); // room for escape characters
   memset(carriage_return, 0, carriage_return_size);
@@ -88,7 +89,7 @@ int handle_input(struct Input_handler *input) {
   memset(new_lines, 0, carriage_return_size);
   new_lines[0] = '\0';
   
-  printf("chars   0/%d ", input->max_input);
+  printf("chars    0/%d ", input->max_input);
   while ((c = getchar()) != '\n') {
     if (input->chars >= input->max_input - 1) {
       printf("\nCharacter limit has been exceeded. Your input will not be saved.\n");
@@ -97,35 +98,46 @@ int handle_input(struct Input_handler *input) {
 
     if (c == 127) {
       handle_backspace(input);
+      cursor_pos -= 2;
     } else {
       input->input[input->chars] = c; // append new character to input
       input->chars++; // increment chars now so that count is accurate
     }
 
-    if (input->chars - (input->max_line_length * input->lines) > input->max_line_length) {
+    if (input->chars - 1 - (input->max_line_length * input->lines) > input->max_line_length) {
       insert_newline(input);
       input->lines++;
+      trailing_chars = (input->max_line_length * (input->lines + 1)) - input->previous_space;
+      printf("\033[%dD", trailing_chars);
+      for (i = 0; i < trailing_chars; i++) {
+	printf(" ");
+      }
       printf("\n"); // erase left over word fragments and jump to newline
+      for (i = trailing_chars; i >= 0; i--) {
+	printf("%c", input->input[(input->max_line_length * input->lines) + 1 - i]);
+      }
       /* carriage_return variable must return to original cursor position
       * every time a newline is printed. */
       snprintf(carriage_return, carriage_return_size, "\033[%dA\r", input->lines);
       snprintf(new_lines, carriage_return_size, "\033[%dB\r", input->lines);
       fflush(stdout);
+      cursor_pos = trailing_chars;
     }
 
-    cursor_pos = input->chars - (input->max_line_length * input->lines);
-    printf("%s\033[6C% 3d/%d%s\033[%dC%c", carriage_return, input->chars,
+    printf("%s\033[6C% 4d/%d%s\033[%dC%c", carriage_return, input->chars,
 	   input->max_input, new_lines, cursor_pos, input->input[input->chars - 1]);
-    
+    cursor_pos++;    
     //printf("%schars % 3d/%03d %s", carriage_return, input->chars, input->max_input, input->input); // reprint input, overwriting current input
     fflush(stdout);
   }
   printf("\n");
 
   free(carriage_return);
+  free(new_lines);
   return 0;
   
  error:
+  free(new_lines);
   free(carriage_return);
   return 1;
 }
@@ -169,7 +181,7 @@ int main(int argc, char *argv[]) {
   int rc = handle_input(input);
   if (rc != 0)
     goto error;
-  
+
   close_input_handler(input);
   return 0;
 
