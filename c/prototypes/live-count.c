@@ -83,6 +83,7 @@ int handle_input(struct Input_handler *input) {
   memset(carriage_return, 0, carriage_return_size);
   carriage_return[0] = '\r';
 
+  printf("chars   0/%d ", input->max_input);
   while ((c = getchar()) != '\n') {
     if (input->chars >= input->max_input - 1) {
       printf("\nCharacter limit has been exceeded. Your input will not be saved.\n");
@@ -99,14 +100,17 @@ int handle_input(struct Input_handler *input) {
     if (input->chars - (input->max_line_length * input->lines) > input->max_line_length) {
       insert_newline(input);
       input->lines++;
-      printf("\33[2K\n"); // erase left over word fragments and jump to newline
+      printf("\n"); // erase left over word fragments and jump to newline
       /* carriage_return variable must return to original cursor position
       * every time a newline is printed. */
-      snprintf(carriage_return, carriage_return_size, "\033[%dA\r", input->lines);
+      //snprintf(carriage_return, carriage_return_size, "\033[%dA\r", input->lines);
       fflush(stdout);
     }
 
-    printf("%schars % 3d/%03d %s", carriage_return, input->chars, input->max_input, input->input); // reprint input, overwriting current input
+    printf("%s\033[6C% 3d/%d\033[%dC%c", carriage_return, input->chars,
+	   input->max_input, input->chars + 1, input->input[input->chars - 1]);
+    
+    //printf("%schars % 3d/%03d %s", carriage_return, input->chars, input->max_input, input->input); // reprint input, overwriting current input
     fflush(stdout);
   }
   printf("\n");
