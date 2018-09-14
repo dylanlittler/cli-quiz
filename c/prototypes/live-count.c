@@ -64,6 +64,14 @@ void insert_newline(char *input, struct Space_holder *last_space) {
   last_space->previous_space = line_end + MAX_LINE_LENGTH;
 }
 
+int handle_backspace(char *input, int chars) {
+  if (chars == 0) // prevents writing to illegal index of input[]
+    return chars;
+  chars--;
+  input[chars] = 0;
+  printf("\033[1D \033[1D"); // overwrite character and move cursor back
+  return chars;
+}
 
 int main(int argc, char *argv[]) {
   enable_raw_mode();
@@ -92,11 +100,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (c == 127) { // handle backspace
-      if (chars == 0) //prevents errors caused by initial backspace
-	continue;
-      chars--;
-      input[chars] = 0;
-      printf("\033[1D \033[1D"); // overwrite character with a space and move cursor back
+      chars = handle_backspace(input, chars); // chars must be updated
     } else {
       input[chars] = c; // append new character to input
       chars++; // increment now so that count will be accurate
