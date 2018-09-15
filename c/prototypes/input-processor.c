@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
     max_input = atoi(argv[2]);
   } else if (argc == 1) {
     max_length = 50;
-    max_input = 100; // reasonable default values
+    max_input = 200; // reasonable default values
   } else {
     printf("USAGE: input-processor max_length max_input\n");
     return 1;
@@ -33,8 +33,6 @@ int main(int argc, char *argv[]) {
   char *user_input = malloc(max_input);
   memset(user_input, 0, max_input);
 
-  printf("Please type your input below. Limit is %d\n", max_input);
-  
   count_characters(user_input, max_input);
 
   insert_newlines(user_input, max_length);

@@ -36,12 +36,25 @@ void enable_raw_mode() {
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 }
 
+void clear_screen() {
+  const char *CLEAR_SCREEN_ANSI = "\e[1;1H\e[2J";
+  write(STDOUT_FILENO, CLEAR_SCREEN_ANSI, 12);
+}
+
 void count_characters(char *input, int max_input) {
   enable_raw_mode();
 
   int c, chars;
 
+  clear_screen();
+  printf("Screen cleared to allow for multiple line input.\n");
+
+  printf("Please type your input below. Limit is %d.\n", max_input);
+  
   chars = 0;
+
+  printf("\033[s"); // save cursor position
+  
   printf("chars % 4d/%03d ", chars, max_input);
   while ((c = getchar()) != '\n') {
     if (chars >= max_input - 1) { // ensure that memory limit will not be exceeded
@@ -58,7 +71,12 @@ void count_characters(char *input, int max_input) {
       input[chars] = c; //append new character to input
       chars++; // increment now so that count will be accurate
     }
-    printf("\rchars % 4d/%03d %s", chars, max_input, input); // reprint input, overwriting current input
+
+    /* This function call will restore original cursor position, save it again,
+    * then print output, to allow cursor to start at original position
+    * in case of input that exceeds one line.
+    */
+    printf("\033[u\033[schars % 4d/%03d %s", chars, max_input, input);
   }
   printf("\n");
 
