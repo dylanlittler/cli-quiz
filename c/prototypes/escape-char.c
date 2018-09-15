@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <unistd.h>
 
 /* This program is designed to test passing escape characters in a variable.
  * The carriage end test does return to the previous line,
@@ -9,7 +10,8 @@
  */
 
 int main(int argc, char *argv[]) {
-  char newline = '\n';
+  /* This code is no longer relevant. Saving cursor position now to be attempted. */
+  /*char newline = '\n';
   char *newlines = "\n\n\n";
   char tab = '\t';
   char *tabs = "\t\t\t";
@@ -22,9 +24,22 @@ int main(int argc, char *argv[]) {
   printf("Multiple tabs: %sEND\n", tabs);
   printf("Warning: unexepected results may occur from carriage returns after this point.\n");
   printf("Single carriage return: %cCARRIAGE_END\n", carriage_return);
-  printf("Multiple carriage returns: %sCARRIAGES_END\n", carriage_returns);
+  printf("Multiple carriage returns: %sCARRIAGES_END\n", carriage_returns);*/
 
   // Ensure that newline is printed afterwards
+
+  /* These codes may not work on this terminal emulator. */
+  printf("\033[s"); // save cursor position
+  printf("Original position.");
+  fflush(stdout);
+  sleep(1);
+  printf("\033[5A"); // move cursor down five lines
+  printf("I am here now after dropping down five lines.");
+  fflush(stdout);
+  sleep(1);
+  printf("\033[u"); // restore original cursor position
+  printf("I am back here now.");
+  fflush(stdout);
   printf("\n");
 
   return 0;
