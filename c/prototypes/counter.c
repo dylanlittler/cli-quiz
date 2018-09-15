@@ -124,7 +124,7 @@ int handle_input(struct Input_handler *ih) {
       fflush(stdout);
     }
     
-    printf("\033[u\033[schars % 4d/%03d %s", ih->chars, ih->max_input, ih->input); // reprint input, overwriting current input
+    printf("%schars % 4d/%03d %s", "\033[u\033[s", ih->chars, ih->max_input, ih->input); // reprint input, overwriting current input
     fflush(stdout);
   }
   printf("\n");
