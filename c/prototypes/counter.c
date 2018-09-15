@@ -74,7 +74,7 @@ void handle_backspace(struct Input_handler *input) {
   if (input->input[input->chars] == '\n') {
     printf("\033[0A");
     input->lines--;
-    if (input->chars <= input->max_line_length) {
+    if (input->lines == 0) {
       memset(input->carriage_return, 0, input->carriage_return_size);
       input->carriage_return[0] = '\r';
     } else {
@@ -108,7 +108,7 @@ int handle_input(struct Input_handler *input) {
       input->chars++; // increment chars now so that count is accurate
     }
 
-    if (input->chars - (input->max_line_length * input->lines) > input->max_line_length) {
+    if (input->chars - (input->max_line_length * input->lines) >= input->max_line_length) {
       //insert_newline(input);
       input->lines++;
       input->previous_space = find_space(input);
