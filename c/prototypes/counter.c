@@ -24,6 +24,8 @@ struct Input_handler {
   char *input;
   int lines;
   int chars;
+  char *carriage_return;
+  int carriage_return_size;
 };
 
 void disable_raw_mode() {
@@ -69,7 +71,21 @@ void handle_backspace(struct Input_handler *input) {
   if (input->chars == 0) // prevents writing to illegal index of input[]
     return;
   input->chars--;
-  input->input[input->chars] = 0;
+  if (input->input[input->chars] == '\n') {
+    printf("\033[0A");
+    input->lines--;
+    if (input->chars <= input->max_line_length) {
+      memset(input->carriage_return, 0, input->carriage_return_size);
+      input->carriage_return[0] = '\r';
+    } else {
+      snprintf(input->carriage_return, input->carriage_return_size, "\033[%dA\r", input->lines);
+    }
+    input->input[input->chars] = 0;
+
+  } else {
+
+    input->input[input->chars] = 0;
+  }
   printf("\033[1D \033[1D"); // overwrite character and move cursor back
 }
 
@@ -77,11 +93,8 @@ int handle_input(struct Input_handler *input) {
   enable_raw_mode();
 
   int c;
-  int carriage_return_size = 10;
-  char *carriage_return = malloc(carriage_return_size); // room for escape characters
-  memset(carriage_return, 0, carriage_return_size);
-  carriage_return[0] = '\r';
 
+  printf("chars % 4d/%03d ", input->chars, input->max_input);
   while ((c = getchar()) != '\n') {
     if (input->chars >= input->max_input - 1) {
       printf("\nCharacter limit has been exceeded. Your input will not be saved.\n");
@@ -96,37 +109,46 @@ int handle_input(struct Input_handler *input) {
     }
 
     if (input->chars - (input->max_line_length * input->lines) > input->max_line_length) {
-      insert_newline(input);
+      //insert_newline(input);
       input->lines++;
+      input->previous_space = find_space(input);
+      input->input[input->previous_space] = '\n';
+      input->previous_space += input->max_line_length;
+
       printf("\33[2K\n"); // erase left over word fragments and jump to newline
+      //printf("\n");
       /* carriage_return variable must return to original cursor position
       * every time a newline is printed. */
-      snprintf(carriage_return, carriage_return_size, "\033[%dA\r", input->lines);
+      snprintf(input->carriage_return, input->carriage_return_size, "\033[%dA\r", input->lines);
+
       fflush(stdout);
     }
 
-    printf("%schars % 3d/%03d %s", carriage_return, input->chars, input->max_input, input->input); // reprint input, overwriting current input
+    printf("%schars % 4d/%03d %s", input->carriage_return, input->chars, input->max_input, input->input); // reprint input, overwriting current input
     fflush(stdout);
   }
   printf("\n");
 
-  free(carriage_return);
   return 0;
   
  error:
-  free(carriage_return);
   return 1;
 }
 
 struct Input_handler *Input_handler_init(int max_line_length, int max_input) {
   /* Initialise Input_handler struct. */
-  struct Input_handler *ih = malloc(max_input + sizeof(int) * 5); // add checks
+  int cr_size = 10;
+  struct Input_handler *ih = malloc(max_input + sizeof(int) * 6 + cr_size); // add checks
   ih->input = malloc(max_input);
   memset(ih->input, 0, max_input);
   ih->max_line_length = max_line_length;
   ih->max_input = max_input;
   ih->previous_space = max_line_length;
   ih->lines = ih->chars = 0;
+  ih->carriage_return_size = cr_size;
+  ih->carriage_return = malloc(cr_size);
+  memset(ih->carriage_return, 0, cr_size);
+  ih->carriage_return[0] = '\r';
   return ih;
 }
 
@@ -134,6 +156,8 @@ void close_input_handler(struct Input_handler *input_handler) {
   if (input_handler) {
     if (input_handler->input)
       free(input_handler->input);
+    if (input_handler->carriage_return)
+      free(input_handler->carriage_return);
     free(input_handler);
   }
 }
