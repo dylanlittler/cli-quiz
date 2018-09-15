@@ -28,10 +28,11 @@ void insert_newlines(char *input, int max_length) {
    */
 
   int line_end = max_length;
-  int line_start = 0;
+  int i = 0;
 
-  for (line_start = 0; line_start <= strlen(input); line_start += max_length) {
-    if (strlen(input) - line_start <= max_length) {
+  // loop runs as long as there are max_length long blocks to split
+  for (i = 0; i <= strlen(input); i += max_length) {
+    if (strlen(input) - i <= max_length) {
       break;
     } else {
       line_end = find_space(input, line_end, max_length);

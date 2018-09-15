@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
     max_input = atoi(argv[2]);
   } else if (argc == 1) {
     max_length = 50;
-    max_input = 200; // reasonable default values
+    max_input = 100; // reasonable default values
   } else {
     printf("USAGE: input-processor max_length max_input\n");
     return 1;
