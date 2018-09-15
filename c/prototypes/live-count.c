@@ -25,6 +25,13 @@ struct Input_handler {
   int lines;
   int chars;
   int cursor_pos;
+  char *carriage_return;
+  int carriage_return_size;
+};
+
+struct Line_break_stack {
+  int *line_breaks;
+  int last_lb;
 };
 
 void disable_raw_mode() {
@@ -66,34 +73,40 @@ void insert_newline(struct Input_handler *input) {
   input->previous_space += input->max_line_length;
 }
 
-void handle_backspace(struct Input_handler *input) {
+void handle_backspace(struct Input_handler *input, struct Line_break_stack *lbs) {
   if (input->chars == 0) // prevents writing to illegal index of input[]
     return;
   input->chars--;
   input->cursor_pos--;
   if (input->input[input->chars - 1] == '\n') {
     printf("\033[0A");
-    input->cursor_pos = (input->previous_space - input->max_line_length) + 14;
+    input->cursor_pos = lbs->line_breaks[lbs->last_lb];
+    lbs->last_lb--;
+    if (lbs->last_lb == 0) {
+      input->cursor_pos += 14;
+      memset(input->carriage_return, 0, input->carriage_return_size);
+      input->carriage_return = "\r";
+    }
   }
   input->input[input->chars] = 0;
   printf("\033[1D \033[1D"); // overwrite character and move cursor back
 }
 
-int handle_input(struct Input_handler *input) {
+void increment_last_lb(struct Line_break_stack *lbs, struct Input_handler *input) {
+  lbs->line_breaks[lbs->last_lb] = input->previous_space - input->max_line_length;
+  lbs->last_lb++;
+}
+
+int handle_input(struct Input_handler *input, struct Line_break_stack *lbs) {
   enable_raw_mode();
 
   int c, i;
   int char_display = 0;
-  int carriage_return_size = 10;
   int trailing_chars = 0;
   //int cursor_pos = 1; // position of first character of input
-
-  char *carriage_return = malloc(carriage_return_size); // room for escape characters
-  memset(carriage_return, 0, carriage_return_size);
-  carriage_return[0] = '\r';
-
-  char *new_lines = malloc(carriage_return_size);
-  memset(new_lines, 0, carriage_return_size);
+  
+  char *new_lines = malloc(input->carriage_return_size);
+  memset(new_lines, 0, input->carriage_return_size);
   new_lines[0] = '\0';
   
   printf("chars    0/%d ", input->max_input);
@@ -104,7 +117,7 @@ int handle_input(struct Input_handler *input) {
     }
 
     if (c == 127) {
-      handle_backspace(input);
+      handle_backspace(input, lbs);
       char_display--;
     } else {
       input->input[input->chars] = c; // append new character to input
@@ -115,6 +128,7 @@ int handle_input(struct Input_handler *input) {
     if (input->chars - 1 - (input->max_line_length * input->lines) > input->max_line_length) {
       insert_newline(input);
       input->lines++;
+      increment_last_lb(lbs, input);
       trailing_chars = (input->max_line_length * (input->lines + 1)) - input->previous_space;
       printf("\033[%dD", trailing_chars);
       for (i = 0; i < trailing_chars; i++) {
@@ -126,14 +140,14 @@ int handle_input(struct Input_handler *input) {
       }
       /* carriage_return variable must return to original cursor position
       * every time a newline is printed. */
-      snprintf(carriage_return, carriage_return_size, "\033[%dA\r", input->lines);
-      snprintf(new_lines, carriage_return_size, "\033[%dB\r", input->lines);
+      snprintf(input->carriage_return, input->carriage_return_size, "\033[%dA\r", input->lines);
+      snprintf(new_lines, input->carriage_return_size, "\033[%dB\r", input->lines);
       fflush(stdout);
       input->cursor_pos = trailing_chars;
     }
 
 
-    printf("%s\033[6C% 4d/%d%s\033[%dC%c", carriage_return, char_display,
+    printf("%s\033[6C% 4d/%d%s\033[%dC%c", input->carriage_return, char_display,
 	   input->max_input, new_lines, input->cursor_pos, input->input[input->chars]);
 
     if (c != 127) {
@@ -144,19 +158,18 @@ int handle_input(struct Input_handler *input) {
   }
   printf("\n");
 
-  free(carriage_return);
   free(new_lines);
   return 0;
   
  error:
   free(new_lines);
-  free(carriage_return);
   return 1;
 }
 
 struct Input_handler *Input_handler_init(int max_line_length, int max_input) {
   /* Initialise Input_handler struct. */
-  struct Input_handler *ih = malloc(max_input + sizeof(int) * 5); // add checks
+  int cr_size = 10;
+  struct Input_handler *ih = malloc(max_input + sizeof(int) * 6 + cr_size); // add checks
   ih->input = malloc(max_input);
   memset(ih->input, 0, max_input);
   ih->max_line_length = max_line_length;
@@ -164,14 +177,36 @@ struct Input_handler *Input_handler_init(int max_line_length, int max_input) {
   ih->previous_space = max_line_length;
   ih->lines = ih->chars = 0;
   ih->cursor_pos = 1;
+  ih->carriage_return_size = cr_size;
+  ih->carriage_return = malloc(ih->carriage_return_size);
+  memset(ih->carriage_return, 0, ih->carriage_return_size);
+  ih->carriage_return = "\r";
   return ih;
+}
+
+struct Line_break_stack *Line_break_stack_init(struct Input_handler *input) {
+  struct Line_break_stack *lbs = malloc(sizeof(int) * (input->max_input / input->max_line_length + 1));
+  lbs->line_breaks = malloc(input->max_input / input->max_line_length + 1);
+  memset(lbs->line_breaks, 0, input->max_input / input->max_line_length + 1);
+  lbs->last_lb = 0;
+  return lbs;
 }
 
 void close_input_handler(struct Input_handler *input_handler) {
   if (input_handler) {
     if (input_handler->input)
       free(input_handler->input);
+    if (input_handler->carriage_return)
+      free(input_handler->carriage_return);
     free(input_handler);
+  }
+}
+
+void close_line_break_stack(struct Line_break_stack *lbs) {
+  if (lbs) {
+    if (lbs->line_breaks)
+      free(lbs->line_breaks);
+    free(lbs);
   }
 }
 
@@ -190,15 +225,19 @@ int main(int argc, char *argv[]) {
 
   struct Input_handler *input = Input_handler_init(max_line_length, max_input);
 
+  struct Line_break_stack *line_breaks = Line_break_stack_init(input);
+  
   printf("Please type your text below. Limit is %d\n", input->max_input);
-  int rc = handle_input(input);
+  int rc = handle_input(input, line_breaks);
   if (rc != 0)
     goto error;
   printf("%s\n", input->input);
   close_input_handler(input);
+  close_line_break_stack(line_breaks);
   return 0;
 
  error:
+  close_line_break_stack(line_breaks);
   close_input_handler(input);
   return 1;
 }
