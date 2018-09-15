@@ -89,42 +89,42 @@ void handle_backspace(struct Input_handler *input) {
   printf("\033[1D \033[1D"); // overwrite character and move cursor back
 }
 
-int handle_input(struct Input_handler *input) {
+int handle_input(struct Input_handler *ih) {
   enable_raw_mode();
 
   int c;
-
-  printf("chars % 4d/%03d ", input->chars, input->max_input);
+  printf("\033[s");
+  printf("chars % 4d/%03d ", ih->chars, ih->max_input);
   while ((c = getchar()) != '\n') {
-    if (input->chars >= input->max_input - 1) {
+    if (ih->chars >= ih->max_input - 1) {
       printf("\nCharacter limit has been exceeded. Your input will not be saved.\n");
       goto error;
     }
 
     if (c == 127) {
-      handle_backspace(input);
+      handle_backspace(ih);
     } else {
-      input->input[input->chars] = c; // append new character to input
-      input->chars++; // increment chars now so that count is accurate
+      ih->input[ih->chars] = c; // append new character to input
+      ih->chars++; // increment chars now so that count is accurate
     }
 
-    if (input->chars - (input->max_line_length * input->lines) >= input->max_line_length) {
+    if (ih->chars - (ih->max_line_length * ih->lines) >= ih->max_line_length) {
       //insert_newline(input);
-      input->lines++;
-      input->previous_space = find_space(input);
-      input->input[input->previous_space] = '\n';
-      input->previous_space += input->max_line_length;
+      ih->lines++;
+      ih->previous_space = find_space(ih);
+      ih->input[ih->previous_space] = '\n';
+      ih->previous_space += ih->max_line_length;
 
-      printf("\33[2K\n"); // erase left over word fragments and jump to newline
+      //printf("\33[2K\n"); // erase left over word fragments and jump to newline
       //printf("\n");
       /* carriage_return variable must return to original cursor position
       * every time a newline is printed. */
-      snprintf(input->carriage_return, input->carriage_return_size, "\033[%dA\r", input->lines);
+      //snprintf(ih->carriage_return, ih->carriage_return_size, "\033[%dA\r", ih->lines);
 
       fflush(stdout);
     }
-
-    printf("%schars % 4d/%03d %s", input->carriage_return, input->chars, input->max_input, input->input); // reprint input, overwriting current input
+    
+    printf("\033[u\033[schars % 4d/%03d %s", ih->chars, ih->max_input, ih->input); // reprint input, overwriting current input
     fflush(stdout);
   }
   printf("\n");
