@@ -14,7 +14,6 @@
  * and the user will be notified.
  */
 
-#define MAX_LINE_LENGTH 50 // set line limit for memory allocation purposes
 
 struct termios orig_termios; // struct to save original terminal settings
 
@@ -37,20 +36,17 @@ void enable_raw_mode() {
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 }
 
-int main(int argc, char *argv[]) {
+void count_characters(char *input, int max_input) {
   enable_raw_mode();
 
   int c, chars;
-  char *input = malloc(MAX_LINE_LENGTH);
-  memset(input, 0, MAX_LINE_LENGTH);
 
   chars = 0;
-  printf("Please type your text below. Limit is %d\n", MAX_LINE_LENGTH);
+  printf("chars % 4d/%03d ", chars, max_input);
   while ((c = getchar()) != '\n') {
-    if (chars >= MAX_LINE_LENGTH - 1) { // ensure that memory limit will not be exceeded
-      printf("\nCharacter limit has been exceeded. Your input will not be saved.\n");
-      free(input); // free variable if program is forced to abort
-      exit(1);
+    if (chars >= max_input - 1) { // ensure that memory limit will not be exceeded
+      printf("\nCharacter limit has been exceeded.\n");
+      return;
     }
     if (c == 127) { // handle backspace
       if (chars == 0) // prevents errors caused by initial backspace, then insert
@@ -62,11 +58,9 @@ int main(int argc, char *argv[]) {
       input[chars] = c; //append new character to input
       chars++; // increment now so that count will be accurate
     }
-    printf("\rchars %02d/%d %s", chars, MAX_LINE_LENGTH, input); // reprint input, overwriting current input
+    printf("\rchars % 4d/%03d %s", chars, max_input, input); // reprint input, overwriting current input
   }
   printf("\n");
 
-  free(input); // free input variable if program runs successfully
-
-  return 0;
+  return;
 }
