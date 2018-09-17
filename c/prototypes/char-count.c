@@ -1,8 +1,7 @@
-#include <unistd.h>
-#include <termios.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "raw_mode.h"
 
 /* This program will provide a live character count of
  * the user's input by adding each character to a variable
@@ -14,32 +13,6 @@
  * and the user will be notified.
  */
 
-
-struct termios orig_termios; // struct to save original terminal settings
-
-void disable_raw_mode() {
-  /* Restore original terminal settings. */
-  tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
-}
-
-void enable_raw_mode() {
-  /* Turn off canon mode in terminal
-   * so that keystrokes are sent to the program. */
-
-  // Save original terminal settings
-  tcgetattr(STDIN_FILENO, &orig_termios);
-  atexit(disable_raw_mode); // ensure settings are restored
-
-  struct termios raw = orig_termios;
-  raw.c_lflag &= ~(ECHO | ICANON); // Stop terminal from processing input
-
-  tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
-}
-
-void clear_screen() {
-  const char *CLEAR_SCREEN_ANSI = "\e[1;1H\e[2J";
-  write(STDOUT_FILENO, CLEAR_SCREEN_ANSI, 12);
-}
 
 void count_characters(char *input, int max_input) {
   enable_raw_mode();

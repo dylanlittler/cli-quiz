@@ -115,7 +115,7 @@ int handle_input(struct Input_handler *ih) {
       ih->input[ih->previous_space] = '\n';
       ih->previous_space += ih->max_line_length;
 
-      //printf("\33[2K\n"); // erase left over word fragments and jump to newline
+      printf("\33[2K\n"); // erase left over word fragments and jump to newline
       //printf("\n");
       /* carriage_return variable must return to original cursor position
       * every time a newline is printed. */

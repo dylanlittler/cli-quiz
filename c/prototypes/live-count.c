@@ -108,7 +108,8 @@ int handle_input(struct Input_handler *input, struct Line_break_stack *lbs) {
   int char_display = 0;
   int trailing_chars = 0;
   //int cursor_pos = 1; // position of first character of input
-  
+
+  printf("\033[s");
   printf("chars    0/%d ", input->max_input);
   while ((c = getchar()) != '\n') {
     if (input->chars >= input->max_input - 1) {
@@ -150,7 +151,7 @@ int handle_input(struct Input_handler *input, struct Line_break_stack *lbs) {
       input->previous_space += input->max_line_length;
     }
 
-    printf("%s\033[6C% 4d/%d%s\033[%dC%c", input->carriage_return, char_display,
+    printf("\033[u\033[s\033[6C% 4d/%d%s\033[%dC%c", char_display,
 	   input->max_input, input->new_lines, input->cursor_pos, input->input[input->chars]);
 
     if (c != 127) {
