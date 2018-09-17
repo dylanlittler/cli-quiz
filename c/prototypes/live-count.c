@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <termios.h>
+#include "raw_mode.h"
 
 /** This program will receive long strings of input and
  * insert newlines at the nearest space before the
@@ -14,8 +13,6 @@
  * If maximum input length is exceeded, input will be trimmed,
  * and the user will be notified.
  */
-
-struct termios orig_termios; // struct to save original terminal settings
 
 struct Input_handler {
   int max_line_length;
@@ -34,25 +31,6 @@ struct Line_break_stack {
   int *line_breaks;
   int last_lb;
 };
-
-void disable_raw_mode() {
-  /* Restore original terminal settings. */
-  tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
-}
-
-void enable_raw_mode() {
-  /* Turn off canononical mode in terminal
-   * so that keystrokes are sent to the program. */
-
-  // Save original terminal settings
-  tcgetattr(STDIN_FILENO, &orig_termios);
-  atexit(disable_raw_mode); // ensure settings are restored
-
-  struct termios raw = orig_termios;
-  raw.c_lflag &= ~(ECHO | ICANON); // Stop terminal from processing input
-
-  tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
-}
 
 int find_space(struct Input_handler *input) {
   /* Search for spaces in input before end

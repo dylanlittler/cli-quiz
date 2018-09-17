@@ -8,7 +8,9 @@ fixed-width-input.o: fixed-width-input.c
 input-processor: input-processor.c raw_mode.o char-count.o fixed-width-input.o
 
 counter.o: counter.c
-counter_main: counter_main.c counter.o
+counter_main: counter_main.c counter.o raw_mode.o
+
+live-count: live-count.c raw_mode.o
 
 clean:
 	rm -rf *~ # Remove Emacs temp files
