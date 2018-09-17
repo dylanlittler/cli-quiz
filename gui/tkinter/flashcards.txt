@@ -1,0 +1,17 @@
+Home page should contain options for entering new cards and for viewing categories and a section for high scores
+
+entry page will contain four fields for entering cards
+
+category page will display all card categories
+
+clicking on a category will display the titles of each entry in that category
+
+clicking on a title will display the question. The user can then click on show answer, which will display the answer, followed by a button for correct and one for incorrect. An option for quitting and saving a high score will be present on these windows.
+Each session will track correct answers out of total attempted
+This will be entered into the database with a timestamp The user can enter a username to save a high score at the end of each attempt
+
+See frames for information on new pages
+
+all categories, each category, questions where category, answers where question
+
+Design db methods to take arguments. Default of *. Arguments can be provided which translate to selection or where criteria.

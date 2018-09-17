@@ -1,0 +1,30 @@
+$def with (questions)
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flashcards</title>
+<link rel="stylesheet" type="text/css" href="../static/flashstyle.css">
+</head>
+<body>
+
+<div id="questions">
+<div id="question-text">
+<ul>
+$for question in questions:
+	<form method="get" action="select">
+	<li><a class="question-link" href="/select?id=$question.ID">$question.TITLE<br>$question.QUESTION</a></li>
+	<form>
+
+</ul>
+</div>
+</div>
+</body>
+</html>
+
+
+<!--<form method="post" action="add">
+<p><input type="text" name="title" /> <input type="submit" value="Add" /></p>
+</form>
+<p><input type="button" name="answer" value="Show Answer" onclick="document.getElementById('t$question.ID').style.display = 'block';"></p>
+</form>
+<li id="t$question.ID" style="display: none">$question.ANSWER</li>-->

@@ -1,0 +1,16 @@
+module to connect to database
+
+App will allow to retrieve from and insert to database
+GUI will display questions and answers
+
+module to insert to database
+module to retrieve
+
+
+Database design:
+
+question
+answer
+title
+id
+category
