@@ -32,6 +32,15 @@ struct Line_break_stack {
   int last_lb;
 };
 
+// forward declarations
+struct Input_handler *Input_handler_init(int max_line_length, int max_input);
+
+struct Line_break_stack *Line_break_stack_init(struct Input_handler *input);
+
+void close_input_handler(struct Input_handler *input_handler);
+void close_line_break_stack(struct Line_break_stack *lbs);
+
+  
 int find_space(struct Input_handler *input) {
   /* Search for spaces in input before end
    * and return the number of the index. */
@@ -43,15 +52,6 @@ int find_space(struct Input_handler *input) {
   return input->previous_space; // fallthrough in case string contains no spaces
 }
 
-void insert_newline(struct Input_handler *input) {
-  /* A newline will be inserted at a space as close to
-   * MAX_LINE_LENGTH as possible. */
-
-  input->previous_space = find_space(input);
-  input->input[input->previous_space] = '\n';
-  input->previous_space += input->max_line_length;
-}
-
 void handle_backspace(struct Input_handler *input, struct Line_break_stack *lbs) {
   if (input->chars == 0) // prevents writing to illegal index of input[]
     return;
@@ -61,8 +61,7 @@ void handle_backspace(struct Input_handler *input, struct Line_break_stack *lbs)
     printf("\033[0A");
     lbs->last_lb--;
     input->cursor_pos = lbs->line_breaks[lbs->last_lb] + 1;
-    if (lbs->last_lb == 0) {
-      //input->cursor_pos += 14;
+    if (input->chars <= input->max_line_length) {
       memset(input->carriage_return, 0, input->carriage_return_size);
       input->carriage_return[0] = '\r';
       memset(input->new_lines, 0, input->carriage_return_size);
@@ -75,75 +74,86 @@ void handle_backspace(struct Input_handler *input, struct Line_break_stack *lbs)
 }
 
 void increment_last_lb(struct Line_break_stack *lbs, struct Input_handler *input) {
+  if (lbs->last_lb > 0) {
   lbs->line_breaks[lbs->last_lb] = input->previous_space - lbs->line_breaks[lbs->last_lb - 1];
+  } else {
+    lbs->line_breaks[lbs->last_lb] = input->previous_space;
+  }
   lbs->last_lb++;
 }
 
-int handle_input(struct Input_handler *input, struct Line_break_stack *lbs) {
+char *handle_input(int max_line_length, int max_input) {
   enable_raw_mode();
 
+  struct Input_handler *ih = Input_handler_init(max_line_length, max_input);
+
+  struct Line_break_stack *lbs = Line_break_stack_init(ih);
+  
   int c, i;
   int char_display = 0;
   int trailing_chars = 0;
-  //int cursor_pos = 1; // position of first character of input
 
   printf("\033[s");
-  printf("chars    0/%d ", input->max_input);
+  printf("chars    0/%d ", ih->max_input);
   while ((c = getchar()) != '\n') {
-    if (input->chars >= input->max_input - 1) {
+    if (ih->chars >= ih->max_input - 1) {
       printf("\nCharacter limit has been exceeded. Your input will not be saved.\n");
       goto error;
     }
 
     if (c == 127) {
-      handle_backspace(input, lbs);
+      handle_backspace(ih, lbs);
       char_display--;
     } else {
-      input->input[input->chars] = c; // append new character to input
-      //input->chars++; // increment chars now so that count is accurate
-      char_display = input->chars + 1;
+      ih->input[ih->chars] = c; // append new character to input
+      char_display = ih->chars + 1;
     }
 
-    if (input->chars - 1 - (input->max_line_length * input->lines) > input->max_line_length) {
-      //insert_newline(input);
-      input->previous_space = find_space(input);
-      input->input[input->previous_space] = '\n';
+    if (ih->chars - 1 - (ih->max_line_length * ih->lines) > ih->max_line_length) {
+      ih->previous_space = find_space(ih);
+      ih->input[ih->previous_space] = '\n';
       
-      input->lines++;
-      increment_last_lb(lbs, input);
-      trailing_chars = (input->max_line_length * (input->lines)) - input->previous_space;
+      ih->lines++;
+      increment_last_lb(lbs, ih);
+      trailing_chars = (ih->max_line_length * (ih->lines)) - ih->previous_space;
       printf("\033[%dD", trailing_chars + 1);
       for (i = 0; i <= trailing_chars; i++) {
 	printf(" ");
       }
       printf("\n"); // erase left over word fragments and jump to newline
       for (i = trailing_chars; i >= 0; i--) {
-	printf("%c", input->input[(input->max_line_length * input->lines) + 1 - i]);
+	printf("%c", ih->input[(ih->max_line_length * ih->lines) + 1 - i]);
       }
       /* carriage_return variable must return to original cursor position
       * every time a newline is printed. */
-      snprintf(input->carriage_return, input->carriage_return_size, "\033[%dA\r", input->lines);
-      snprintf(input->new_lines, input->carriage_return_size, "\033[%dB\r", input->lines);
+      snprintf(ih->carriage_return, ih->carriage_return_size, "\033[%dA\r", ih->lines);
+      snprintf(ih->new_lines, ih->carriage_return_size, "\033[%dB\r", ih->lines);
       fflush(stdout);
-      input->cursor_pos = trailing_chars + 1;
-      input->previous_space += input->max_line_length;
+      ih->cursor_pos = trailing_chars + 1;
+      ih->previous_space += ih->max_line_length;
     }
 
     printf("\033[u\033[s\033[6C% 4d/%d%s\033[%dC%c", char_display,
-	   input->max_input, input->new_lines, input->cursor_pos, input->input[input->chars]);
+	   ih->max_input, ih->new_lines, ih->cursor_pos, ih->input[ih->chars]);
 
     if (c != 127) {
-      input->chars++;
-      input->cursor_pos++;
+      ih->chars++;
+      ih->cursor_pos++;
     }
     fflush(stdout);
   }
   printf("\n");
 
-  return 0;
+  char *user_input = malloc(max_input);
+  memcpy(user_input, ih->input, max_input);
+  close_input_handler(ih);
+  close_line_break_stack(lbs);
+  return user_input;
 
  error:
-  return 1;
+  close_input_handler(ih);
+  close_line_break_stack(lbs);
+  return "";
 }
 
 struct Input_handler *Input_handler_init(int max_line_length, int max_input) {
@@ -168,7 +178,7 @@ struct Input_handler *Input_handler_init(int max_line_length, int max_input) {
 
 struct Line_break_stack *Line_break_stack_init(struct Input_handler *input) {
   struct Line_break_stack *lbs = malloc(sizeof(int) * (input->max_input / input->max_line_length + 1));
-  lbs->line_breaks = malloc(input->max_input / input->max_line_length + 1);
+  lbs->line_breaks = malloc((input->max_input / input->max_line_length + 1) * sizeof(int));
   memset(lbs->line_breaks, 0, input->max_input / input->max_line_length + 1);
   lbs->last_lb = 0;
   return lbs;
@@ -207,21 +217,12 @@ int main(int argc, char *argv[]) {
     max_input = 200;
   }
 
-  struct Input_handler *input = Input_handler_init(max_line_length, max_input);
-
-  struct Line_break_stack *line_breaks = Line_break_stack_init(input);
+  //char *user_input = malloc(max_input);
+  //memset(user_input, 0, max_input);
   
-  printf("Please type your text below. Limit is %d\n", input->max_input);
-  int rc = handle_input(input, line_breaks);
-  if (rc != 0)
-    goto error;
-  printf("%s\n", input->input);
-  close_input_handler(input);
-  close_line_break_stack(line_breaks);
+  printf("Please type your text below. Limit is %d\n", max_input);
+  char *user_input = handle_input(max_line_length, max_input);
+  printf("%s\n", user_input);
+  free(user_input);
   return 0;
-
- error:
-  close_line_break_stack(line_breaks);
-  close_input_handler(input);
-  return 1;
 }
