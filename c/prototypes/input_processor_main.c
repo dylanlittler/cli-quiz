@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "input-processor.h"
+#include "input_processor.h"
 
 /** This program will display a character count while the
  * user is typing, then echo the input back to the screen

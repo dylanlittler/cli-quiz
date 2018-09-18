@@ -30,4 +30,4 @@ void enable_raw_mode() {
   raw.c_lflag &= ~(ECHO | ICANON);
 
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
-}
+}  
