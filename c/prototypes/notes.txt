@@ -1,3 +1,0 @@
-Edit live-count.c into seperate parts, then link them to input-processor.h so that it implements that functionality.
-
-live-count.c stops at a space before backspacing to previous line. Also stays on same line when backspacing past newline.
