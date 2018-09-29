@@ -13,13 +13,12 @@
 
 
 // forward declarations
-struct Input_handler *Input_handler_init(int max_line_length, int max_input);
+struct Input_handler *Input_handler_init(int max_line_length);
 
 void close_input_handler(struct Input_handler *input_handler);
 
 struct Input_handler {
   int max_line_length;
-  int max_input;
   int previous_space;
   char *input;
   int chars;
@@ -49,24 +48,20 @@ void handle_backspace(struct Input_handler *input) {
   printf("\033[1D \033[1D"); // overwrite character and move cursor back
 }
 
-char *handle_input(int max_line_length, int max_input) {
+char *handle_input(int max_line_length) {
   enable_raw_mode();
   clear_screen();
 
-  struct Input_handler *ih = Input_handler_init(max_line_length, max_input);
+  struct Input_handler *ih = Input_handler_init(max_line_length);
   
   int c;
   
   printf("Screen cleared to allow room for input.\n");
-  printf("Please type your input below. Limit is %d characters.\n", max_input);
+  printf("Please type your input below.\n");
   printf("\033[s");
-  printf("chars % 4d/%03d ", ih->chars, ih->max_input);
+  printf("chars % 4d ", ih->chars);
   
   while ((c = getchar()) != '\n') {
-    if (ih->chars >= ih->max_input - 1) {
-      printf("\nCharacter limit has been exceeded. Your input will not be saved.\n");
-      goto error;
-    }
 
     if (c == 127) {
       handle_backspace(ih);
@@ -77,6 +72,8 @@ char *handle_input(int max_line_length, int max_input) {
 
     if (ih->chars - (ih->max_line_length * ih->lines) >= ih->max_line_length) {
       ih->lines++;
+      ih->input = realloc(ih->input, (ih->lines + 1) * ih->max_line_length);
+      ih->input[ih->chars] = '\0'; // Null byte is not set after reallocation.
       ih->previous_space = find_space(ih);
       ih->input[ih->previous_space] = '\n';
       ih->previous_space += ih->max_line_length;
@@ -84,30 +81,23 @@ char *handle_input(int max_line_length, int max_input) {
       printf("\33[2K\n"); // erase left over word fragments and jump to newline
       fflush(stdout);
     }
-    
-    printf("%schars % 4d/%03d %s", "\033[u\033[s", ih->chars, ih->max_input, ih->input); // reprint input, overwriting current input
+    ih->input[ih->chars] = '\0';
+    printf("%schars % 4d %s", "\033[u\033[s", ih->chars, ih->input); // reprint input, overwriting current input
     fflush(stdout);
   }
   printf("\n");
 
-  char *user_input = malloc(max_input);
-  memcpy(user_input, ih->input, ih->max_input);
+  char *user_input = malloc((ih->lines + 1) * ih->max_line_length);
+  memcpy(user_input, ih->input, (ih->lines + 1) * ih->max_line_length);
   close_input_handler(ih);
-  return user_input;
-  
- error:
-  close_input_handler(ih);
-  user_input = NULL; // main function will check for this
   return user_input;
 }
 
-struct Input_handler *Input_handler_init(int max_line_length, int max_input) {
+struct Input_handler *Input_handler_init(int max_line_length) {
   /* Initialise Input_handler struct. */
-  struct Input_handler *ih = malloc(max_input + sizeof(int) * 5); // add checks
-  ih->input = malloc(max_input);
-  memset(ih->input, 0, max_input);
+  struct Input_handler *ih = malloc(sizeof(char *) + sizeof(int) * 4); // add checks
+  ih->input = malloc(max_line_length);
   ih->max_line_length = max_line_length;
-  ih->max_input = max_input;
   ih->previous_space = max_line_length;
   ih->lines = ih->chars = 0;
   return ih;
