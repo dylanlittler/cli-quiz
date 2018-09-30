@@ -48,6 +48,10 @@ void handle_backspace(struct Input_handler *input) {
   printf("\033[1D \033[1D"); // overwrite character and move cursor back
 }
 
+void Expand_String(struct Input_handler *ih, int new_size) {
+  ih->input = realloc(ih->input, new_size);
+}
+
 char *handle_input(int max_line_length) {
   enable_raw_mode();
   clear_screen();
@@ -72,7 +76,7 @@ char *handle_input(int max_line_length) {
 
     if (ih->chars - (ih->max_line_length * ih->lines) >= ih->max_line_length) {
       ih->lines++;
-      ih->input = realloc(ih->input, (ih->lines + 1) * ih->max_line_length);
+      Expand_String(ih, (ih->lines + 1) * ih->max_line_length);
       ih->input[ih->chars] = '\0'; // Null byte is not set after reallocation.
       ih->previous_space = find_space(ih);
       ih->input[ih->previous_space] = '\n';
