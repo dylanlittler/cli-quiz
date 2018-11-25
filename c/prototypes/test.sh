@@ -48,7 +48,7 @@ ONE_SPACE_TEST="hhhhhhhhhhhhhhhh hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"
 # No word is longer than 50 characters, which is the recommended minimum.
 NO_SPACES_TEST="hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"
 NO_SPACES_LONG_TEST="hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"
-MEMORY_LIMIT_TEST="This input is designed to exceed the limit of the memory allocated for the program - currently 200 characters. A large amount of input will be provided to ensure that the program aborts safely. This input should be pasted while the program runs in Valgrind as well, to check for memory leaks."
+MEMORY_LIMIT_TEST="This input is designed to exceed the limit of the memory allocated for the program - currently 200 characters. A large amount of input will be provided to ensure that the program reallocates memory safely. This input should be pasted while the program runs in Valgrind as well, to check for memory leaks. No leaks should be detected, as this will reallocate memory to accomodate large input."
 
 # Test each input against the program
 echo $TEST_ONE | ./$PROGRAM
