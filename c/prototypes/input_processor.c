@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "bstrlib.h"
 #include "raw_mode.h"
 
 /**
@@ -18,8 +19,8 @@ struct Input_handler *Input_handler_init(int max_line_length);
 void close_input_handler(struct Input_handler *input_handler);
 
 struct Input_handler {
-  int max_line_length;
-  int previous_space;
+  int max_line_length; // length before line break
+  int previous_space; // last space before word that crosses line break
   char *input;
   int chars;
   int lines;
@@ -52,12 +53,12 @@ void Expand_String(struct Input_handler *ih, int new_size) {
   ih->input = realloc(ih->input, new_size);
 }
 
-char *handle_input(int max_line_length) {
+bstring handle_input(int max_line_length) {
   enable_raw_mode();
   clear_screen();
 
   struct Input_handler *ih = Input_handler_init(max_line_length);
-  
+  check(ih != NULL, "Input handler not allocated correctly.");
   int c;
   
   printf("Screen cleared to allow room for input.\n");
@@ -91,20 +92,29 @@ char *handle_input(int max_line_length) {
   }
   printf("\n");
 
-  char *user_input = malloc((ih->lines + 1) * ih->max_line_length);
-  memcpy(user_input, ih->input, (ih->lines + 1) * ih->max_line_length);
+  //char *user_input = malloc((ih->lines + 1) * ih->max_line_length);
+  //memcpy(user_input, ih->input, (ih->lines + 1) * ih->max_line_length);
+  bstring user_input = bfromcstr(ih->input);
   close_input_handler(ih);
   return user_input;
+
+ error:
+  return NULL;
 }
 
 struct Input_handler *Input_handler_init(int max_line_length) {
   /* Initialise Input_handler struct. */
-  struct Input_handler *ih = malloc(sizeof(char *) + sizeof(int) * 4); // add checks
+  struct Input_handler *ih = malloc(sizeof(char *) + (sizeof(int) * 4));
+  check_mem(ih);
   ih->input = malloc(max_line_length);
+  check_mem(ih->input);
   ih->max_line_length = max_line_length;
   ih->previous_space = max_line_length;
   ih->lines = ih->chars = 0;
   return ih;
+
+ error:
+  return NULL;
 }
 
 void close_input_handler(struct Input_handler *input_handler) {
