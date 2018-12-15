@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
   
   bstring user_input = handle_input(max_line_length);
   
-  printf("\nYour input:\n%s\n", user_input);
+  printf("\nYour input:\n%s\n", bdata(user_input));
   
   bdestroy(user_input);
   return 0;
