@@ -3,6 +3,7 @@
 #include <string.h>
 #include "bstrlib.h"
 #include "raw_mode.h"
+#include "dbg.h"
 
 /**
  * This program clears the screen, receives live input from user,

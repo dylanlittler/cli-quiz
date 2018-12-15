@@ -7,7 +7,7 @@
  * clearing the screen. */
 
 void clear_screen() {
-  const char *CLEAR_SCREEN_ANSI = "\e[1;1H\e[2J";
+  const char *CLEAR_SCREEN_ANSI = "\e[1H\e[J\e[2J";
   write(STDOUT_FILENO, CLEAR_SCREEN_ANSI, 12);
 }
 
